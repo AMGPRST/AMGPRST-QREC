@@ -10,9 +10,12 @@ from os.path import abspath
 from time import strftime,localtime,time
 from util.measure import Measure
 from util.qmath import find_k_largest
+import numpy as np
 
 class Recommender(object):
     def __init__(self,conf,trainingSet,testSet,fold='[1]'):
+        self.U = None
+        self.V = None
         self.config = conf
         self.data = None
         self.isSaveModel = False
@@ -152,7 +155,6 @@ class Recommender(object):
         else:
             print('No correct evaluation metric is specified!')
             exit(-1)
-        self.recOutput.append('userId: recommendations in (itemId, ranking score) pairs, * means the item matches.\n')
         # predict
         recList = {}
         userCount = len(self.data.testSet_u)
@@ -188,6 +190,11 @@ class Recommender(object):
             N) + 'items' + self.foldInfo + '.txt'
             FileIO.writeFile(outDir, fileName, self.recOutput)
             print('The result has been output to ', abspath(outDir), '.')
+            # Save the model
+            data = np.array([self.U, self.V,
+                             self.data.user, self.data.item,
+                             self.data.id2user, self.data.id2item], dtype=object)
+            np.savez_compressed(outDir + self.config['model.name'] + '@' + currentTime + '-model.npz', data)
         # output evaluation result
         if self.evalSettings.contains('-predict'):
             #no evalutation
