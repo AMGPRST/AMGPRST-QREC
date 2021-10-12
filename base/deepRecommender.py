@@ -16,16 +16,16 @@ class DeepRecommender(IterativeRecommender):
 
     def initModel(self):
         super(DeepRecommender, self).initModel()
-        self.u_idx = tf.placeholder(tf.int32, name="u_idx")
-        self.v_idx = tf.placeholder(tf.int32, name="v_idx")
-        self.r = tf.placeholder(tf.float32, name="rating")
-        self.user_embeddings = tf.Variable(tf.truncated_normal(shape=[self.num_users, self.emb_size], stddev=0.005), name='U')
-        self.item_embeddings = tf.Variable(tf.truncated_normal(shape=[self.num_items, self.emb_size], stddev=0.005), name='V')
+        self.u_idx = tf.compat.v1.placeholder(tf.int32, name="u_idx")
+        self.v_idx = tf.compat.v1.placeholder(tf.int32, name="v_idx")
+        self.r = tf.compat.v1.placeholder(tf.float32, name="rating")
+        self.user_embeddings = tf.Variable(tf.random.truncated_normal(shape=[self.num_users, self.emb_size], stddev=0.005), name='U')
+        self.item_embeddings = tf.Variable(tf.random.truncated_normal(shape=[self.num_items, self.emb_size], stddev=0.005), name='V')
         self.u_embedding = tf.nn.embedding_lookup(self.user_embeddings, self.u_idx)
         self.v_embedding = tf.nn.embedding_lookup(self.item_embeddings, self.v_idx)
-        config = tf.ConfigProto()
+        config = tf.compat.v1.ConfigProto()
         config.gpu_options.allow_growth = True
-        self.sess = tf.Session(config=config)
+        self.sess = tf.compat.v1.Session(config=config)
 
     def next_batch_pairwise(self):
         shuffle(self.data.trainingData)

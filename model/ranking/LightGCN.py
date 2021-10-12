@@ -18,26 +18,25 @@ class LightGCN(DeepRecommender):
 
         all_embeddings = [ego_embeddings]
         for k in range(self.n_layers):
-            ego_embeddings = tf.sparse_tensor_dense_matmul(norm_adj,ego_embeddings)
+            ego_embeddings = tf.sparse.sparse_dense_matmul(norm_adj,ego_embeddings)
             # normalize the distribution of embeddings.
             norm_embeddings = tf.math.l2_normalize(ego_embeddings, axis=1)
             all_embeddings += [norm_embeddings]
         all_embeddings = tf.reduce_sum(all_embeddings, axis=0)
         self.multi_user_embeddings, self.multi_item_embeddings = tf.split(all_embeddings, [self.num_users, self.num_items], 0)
-        self.neg_idx = tf.placeholder(tf.int32, name="neg_holder")
+        self.neg_idx = tf.compat.v1.placeholder(tf.int32, name="neg_holder")
         self.neg_item_embedding = tf.nn.embedding_lookup(self.multi_item_embeddings, self.neg_idx)
         self.u_embedding = tf.nn.embedding_lookup(self.multi_user_embeddings, self.u_idx)
         self.v_embedding = tf.nn.embedding_lookup(self.multi_item_embeddings, self.v_idx)
         self.test = tf.reduce_sum(tf.multiply(self.u_embedding,self.multi_item_embeddings),1)
 
-
     def buildModel(self):
         y = tf.reduce_sum(tf.multiply(self.u_embedding, self.v_embedding), 1) \
             - tf.reduce_sum(tf.multiply(self.u_embedding, self.neg_item_embedding), 1)
-        loss = -tf.reduce_sum(tf.log(tf.sigmoid(y))) + self.regU * (tf.nn.l2_loss(self.user_embeddings) + tf.nn.l2_loss(self.item_embeddings))
-        opt = tf.train.AdamOptimizer(self.lRate)
+        loss = -tf.reduce_sum(tf.math.log(tf.sigmoid(y))) + self.regU * (tf.nn.l2_loss(self.user_embeddings) + tf.nn.l2_loss(self.item_embeddings))
+        opt = tf.compat.v1.train.AdamOptimizer(self.lRate)
         train = opt.minimize(loss)
-        init = tf.global_variables_initializer()
+        init = tf.compat.v1.global_variables_initializer()
         self.sess.run(init)
         for iteration in range(self.maxIter):
             for n, batch in enumerate(self.next_batch_pairwise()):
